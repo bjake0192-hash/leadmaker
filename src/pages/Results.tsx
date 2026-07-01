@@ -129,10 +129,13 @@ const Results: React.FC = () => {
                   Name
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Phone
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Email
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Company
+                  Address
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Source
@@ -147,6 +150,9 @@ const Results: React.FC = () => {
                       {result.name || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {result.phone || '-'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {result.email ? (
                         <a href={`mailto:${result.email}`} className="text-blue-600 hover:underline">
                           {result.email}
@@ -155,8 +161,8 @@ const Results: React.FC = () => {
                         '-'
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {result.company || '-'}
+                    <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                      {result.address || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <a 

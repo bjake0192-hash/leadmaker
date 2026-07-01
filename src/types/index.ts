@@ -14,6 +14,8 @@ export interface Result {
   search_id: string;
   name?: string;
   email?: string;
+  phone?: string;
+  address?: string;
   company?: string;
   source_url: string;
   scraped_at?: string;

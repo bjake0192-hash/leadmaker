@@ -5,7 +5,7 @@ import { PipelineOrchestrator } from '../pipeline/PipelineOrchestrator.js';
 const router = Router();
 
 router.post('/', async (req: Request, res: Response): Promise<void> => {
-  const { keyword, location, max_results = 10, query, fastMode = false } = req.body;
+  const { keyword, location, max_results = 10, query, fastMode = false, requirePhone = false } = req.body;
 
   if (!keyword || !location) {
     res.status(400).json({ error: 'Keyword and location are required' });
@@ -17,7 +17,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
     const { data: search, error: createError } = await supabase
       .from('searches')
       .insert({
-        query: query || `${keyword} in ${location}${fastMode ? ' (Fast Mode)' : ''}`,
+        query: query || `${keyword} in ${location}${fastMode ? ' (Fast Mode)' : ''}${requirePhone ? ' (Phone Only)' : ''}`,
         max_results,
         status: 'pending'
       })
@@ -49,12 +49,15 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
           location,
           maxResultsPerRegion: max_results,
           fastMode,
+          requirePhone,
         });
 
         const validResults = pipelineLeads.map(lead => ({
           search_id: search.id,
           name: lead.name,
           email: lead.emails.length > 0 ? lead.emails[0] : null,
+          phone: lead.phones.length > 0 ? lead.phones[0] : null,
+          address: lead.address,
           company: lead.name,
           source_url: lead.url,
         }));
@@ -111,12 +114,15 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
           location,
           maxResultsPerRegion: max_results,
           fastMode,
+          requirePhone,
         });
 
         const validResults = pipelineLeads.map(lead => ({
           search_id: search.id,
           name: lead.name,
           email: lead.emails.length > 0 ? lead.emails[0] : null,
+          phone: lead.phones.length > 0 ? lead.phones[0] : null,
+          address: lead.address,
           company: lead.name,
           source_url: lead.url,
         }));

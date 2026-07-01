@@ -44,8 +44,15 @@ export class PipelineOrchestrator {
 
     // 3. Deduplicator: Remove duplicate domains
     console.log(`[Pipeline] Found ${allDiscoveredLeads.length} total leads. Deduplicating...`);
-    const uniqueLeads = this.deduplicator.deduplicate(allDiscoveredLeads);
+    let uniqueLeads = this.deduplicator.deduplicate(allDiscoveredLeads);
     console.log(`[Pipeline] ${uniqueLeads.length} unique leads remain.`);
+
+    // 3b. Optional: Filter by phone number if required
+    if (config.requirePhone) {
+      console.log(`[Pipeline] Filtering for leads with phone numbers...`);
+      uniqueLeads = uniqueLeads.filter(lead => lead.phones && lead.phones.length > 0);
+      console.log(`[Pipeline] ${uniqueLeads.length} leads remain after phone filtering.`);
+    }
 
     // 4. Processing Phase: Crawl -> Contacts
     if (config.fastMode) {

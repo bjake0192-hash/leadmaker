@@ -37,6 +37,8 @@ CREATE TABLE results (
     search_id UUID REFERENCES searches(id) ON DELETE CASCADE,
     name VARCHAR(255),
     email VARCHAR(255),
+    phone VARCHAR(50),
+    address TEXT,
     company VARCHAR(255),
     source_url TEXT NOT NULL,
     scraped_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

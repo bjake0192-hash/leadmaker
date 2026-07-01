@@ -9,6 +9,7 @@ const Home: React.FC = () => {
   const [location, setLocation] = useState('');
   const [maxResults, setMaxResults] = useState(10);
   const [fastMode, setFastMode] = useState(true);
+  const [requirePhone, setRequirePhone] = useState(true);
   const [loading, setLoading] = useState(false);
   const [recentSearches, setRecentSearches] = useState<Search[]>([]);
   const navigate = useNavigate();
@@ -39,7 +40,8 @@ const Home: React.FC = () => {
         keyword,
         location,
         max_results: maxResults,
-        fastMode
+        fastMode,
+        requirePhone
       });
       
       const { search_id } = response.data;
@@ -102,8 +104,8 @@ const Home: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-between space-x-4">
-              <div className="flex-1">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+              <div>
                 <label htmlFor="maxResults" className="block text-sm font-medium text-gray-700 text-left mb-1">
                   Max Results
                 </label>
@@ -123,7 +125,7 @@ const Home: React.FC = () => {
                 </select>
               </div>
 
-              <div className="flex-1">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 text-left mb-1">
                   Search Speed
                 </label>
@@ -142,16 +144,40 @@ const Home: React.FC = () => {
                     />
                   </button>
                   <span className="ml-3 text-sm text-gray-500">
-                    {fastMode ? 'Fast Mode (Maps only)' : 'Deep Mode (Crawl sites)'}
+                    {fastMode ? 'Fast' : 'Deep'}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 text-left mb-1">
+                  Contact Filtering
+                </label>
+                <div className="mt-1 flex items-center h-10">
+                  <button
+                    type="button"
+                    onClick={() => setRequirePhone(!requirePhone)}
+                    className={`${
+                      requirePhone ? 'bg-blue-600' : 'bg-gray-200'
+                    } relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                  >
+                    <span
+                      className={`${
+                        requirePhone ? 'translate-x-5' : 'translate-x-0'
+                      } pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200`}
+                    />
+                  </button>
+                  <span className="ml-3 text-sm text-gray-500">
+                    {requirePhone ? 'Phone Only' : 'All Leads'}
                   </span>
                 </div>
               </div>
               
-              <div className="flex-none pt-6">
+              <div>
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  className={`w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
                   {loading ? (
                     <>
