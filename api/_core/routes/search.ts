@@ -60,7 +60,15 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
         }));
 
         if (validResults.length > 0) {
-          await supabase.from('results').insert(validResults);
+          console.log(`[search.ts] Inserting ${validResults.length} leads into results table...`);
+          const { error: insertError } = await supabase.from('results').insert(validResults);
+          if (insertError) {
+            console.error('[search.ts] Error inserting results:', insertError);
+            throw insertError;
+          }
+          console.log('[search.ts] Successfully inserted leads.');
+        } else {
+          console.log('[search.ts] No leads found to insert.');
         }
 
         await supabase
@@ -114,7 +122,14 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
         }));
 
         if (validResults.length > 0) {
-          await supabase.from('results').insert(validResults);
+          console.log(`[search.ts] Inserting ${validResults.length} leads into results table (Background)...`);
+          const { error: insertError } = await supabase.from('results').insert(validResults);
+          if (insertError) {
+            console.error('[search.ts] Error inserting results (Background):', insertError);
+            throw insertError;
+          }
+        } else {
+          console.log('[search.ts] No leads found to insert (Background).');
         }
 
         await supabase

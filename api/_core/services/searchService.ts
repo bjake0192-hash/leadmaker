@@ -30,25 +30,35 @@ const BLOCKED_DOMAINS = [
 ];
 
 export const searchGoogle = async (query: string, numResults: number = 10): Promise<SearchResult[]> => {
-  console.log(`Starting search for: "${query}" with target results: ${numResults}`);
+  console.log(`[searchService] Starting search for: "${query}" with target results: ${numResults}`);
   
   // 1. Try Serper.dev first (Most generous free tier: 2500 requests)
   const serperApiKey = process.env.SERPER_API_KEY;
   if (serperApiKey && serperApiKey !== 'your_serper_api_key_here') {
+      console.log(`[searchService] Using Serper.dev for "${query}"`);
       try {
           return await searchSerperMaps(query, numResults, serperApiKey);
       } catch (e) {
-          console.error("Serper.dev search failed, falling back...");
+          console.error(`[searchService] Serper.dev search failed for "${query}":`, e);
       }
+  } else {
+      console.log(`[searchService] Skipping Serper.dev: API key is missing or placeholder.`);
   }
 
   // 2. Fallback to SerpApi if available
   const serpapiKey = process.env.SERPAPI_KEY;
   if (serpapiKey && serpapiKey !== 'your_serpapi_key_here') {
-      return searchGoogleMaps(query, numResults, serpapiKey);
+      console.log(`[searchService] Using SerpApi for "${query}"`);
+      try {
+          return await searchGoogleMaps(query, numResults, serpapiKey);
+      } catch (e) {
+          console.error(`[searchService] SerpApi search failed for "${query}":`, e);
+      }
+  } else {
+      console.log(`[searchService] Skipping SerpApi: API key is missing or placeholder.`);
   }
   
-  console.log("No valid API keys found. Falling back to DuckDuckGo/Bing web search.");
+  console.log(`[searchService] Falling back to DuckDuckGo/Bing web search for "${query}"`);
   
   // Increase search limit internally to account for filtered results
   // We need to fetch significantly more because filtering might remove 80-90% of results
@@ -144,27 +154,30 @@ const searchSerperMaps = async (query: string, limit: number, apiKey: string): P
             for (const place of response.data.maps) {
                 if (results.length >= limit) break;
                 
-                // Only include businesses that actually have a website
-                if (place.website) {
+                // Use website if available, otherwise fallback to a search link or empty string
+                const link = place.website || '';
+                
+                // If they have a website, check against blocklist
+                if (link) {
                     try {
-                        const domain = new URL(place.website).hostname.toLowerCase().replace('www.', '');
+                        const domain = new URL(link).hostname.toLowerCase().replace('www.', '');
                         if (BLOCKED_DOMAINS.some(blocked => domain.includes(blocked))) {
                             continue;
                         }
                     } catch (e) {
-                        continue;
+                        // Keep if URL is weird but not blocked
                     }
-
-                    results.push({
-                        title: place.title,
-                        link: place.website,
-                        snippet: place.category || place.address || '',
-                        source: 'serper_maps',
-                        phone: place.phoneNumber,
-                        address: place.address,
-                        type: place.category
-                    });
                 }
+
+                results.push({
+                    title: place.title,
+                    link: link,
+                    snippet: place.category || place.address || '',
+                    source: 'serper_maps',
+                    phone: place.phoneNumber,
+                    address: place.address,
+                    type: place.category
+                });
             }
         }
         console.log(`Serper.dev returned ${results.length} valid results with websites.`);
