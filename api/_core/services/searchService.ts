@@ -149,9 +149,21 @@ const searchSerperMaps = async (query: string, limit: number, apiKey: string): P
         });
 
         console.log(`[Serper] Raw response status: ${response.status}`);
-        if (response.data.maps && Array.isArray(response.data.maps)) {
-            console.log(`[Serper] Found ${response.data.maps.length} raw results in maps array.`);
-            for (const place of response.data.maps) {
+        
+        // Debug: Log keys if maps is missing
+        if (!response.data.maps) {
+            console.log(`[Serper] DEBUG - 'maps' key missing. Available keys: ${Object.keys(response.data).join(', ')}`);
+            if (Object.keys(response.data).length > 0) {
+                console.log(`[Serper] DEBUG - Full Response: ${JSON.stringify(response.data).substring(0, 500)}`);
+            }
+        }
+
+        // Handle different possible Serper response structures
+        const mapsData = response.data.maps || response.data.places || response.data.localResults || [];
+
+        if (Array.isArray(mapsData) && mapsData.length > 0) {
+            console.log(`[Serper] Found ${mapsData.length} raw results.`);
+            for (const place of mapsData) {
                 if (results.length >= limit) break;
                 
                 // Use website if available, otherwise fallback to a search link or empty string
