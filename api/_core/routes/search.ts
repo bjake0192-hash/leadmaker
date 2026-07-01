@@ -72,13 +72,26 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
         if (validResults.length > 0) {
           console.log(`[search.ts] Inserting ${validResults.length} leads into results table...`);
           
-          // GLOBAL DEDUPLICATION: Don't pull leads that have been pulled in ANY search before
-          const { data: existingResults } = await supabase
+          // GLOBAL DEDUPLICATION: Check against ALL historical data in Supabase
+          const { data: historicalLeads } = await supabase
             .from('results')
-            .select('source_url');
+            .select('source_url, phone');
           
-          const existingUrls = new Set(existingResults?.map(r => r.source_url) || []);
-          const trulyNewResults = validResults.filter(r => !existingUrls.has(r.source_url));
+          const existingUrls = new Set(historicalLeads?.map(r => r.source_url).filter(url => url && url.length > 0) || []);
+          const existingPhones = new Set(historicalLeads?.map(r => r.phone?.replace(/\D/g, '')).filter(p => p && p.length > 0) || []);
+
+          const trulyNewResults = validResults.filter(r => {
+            // Check URL
+            if (r.source_url && r.source_url.length > 0 && existingUrls.has(r.source_url)) return false;
+            
+            // Check Phone
+            if (r.phone) {
+              const normalizedPhone = r.phone.replace(/\D/g, '');
+              if (normalizedPhone && existingPhones.has(normalizedPhone)) return false;
+            }
+            
+            return true;
+          });
 
           if (trulyNewResults.length > 0) {
             const { error: insertError } = await supabase.from('results').insert(trulyNewResults);
@@ -153,12 +166,21 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
           console.log(`[search.ts] Inserting ${validResults.length} leads into results table (Background)...`);
           
           // GLOBAL DEDUPLICATION
-          const { data: existingResults } = await supabase
+          const { data: historicalLeads } = await supabase
             .from('results')
-            .select('source_url');
+            .select('source_url, phone');
           
-          const existingUrls = new Set(existingResults?.map(r => r.source_url) || []);
-          const trulyNewResults = validResults.filter(r => !existingUrls.has(r.source_url));
+          const existingUrls = new Set(historicalLeads?.map(r => r.source_url).filter(url => url && url.length > 0) || []);
+          const existingPhones = new Set(historicalLeads?.map(r => r.phone?.replace(/\D/g, '')).filter(p => p && p.length > 0) || []);
+
+          const trulyNewResults = validResults.filter(r => {
+            if (r.source_url && r.source_url.length > 0 && existingUrls.has(r.source_url)) return false;
+            if (r.phone) {
+              const normalizedPhone = r.phone.replace(/\D/g, '');
+              if (normalizedPhone && existingPhones.has(normalizedPhone)) return false;
+            }
+            return true;
+          });
 
           if (trulyNewResults.length > 0) {
             const { error: insertError } = await supabase.from('results').insert(trulyNewResults);
@@ -260,12 +282,22 @@ router.post('/extend', async (req: Request, res: Response): Promise<void> => {
         }));
 
         if (validResults.length > 0) {
-          const { data: existingResults } = await supabase
+          // GLOBAL DEDUPLICATION
+          const { data: historicalLeads } = await supabase
             .from('results')
-            .select('source_url');
+            .select('source_url, phone');
           
-          const existingUrls = new Set(existingResults?.map(r => r.source_url) || []);
-          const trulyNewResults = validResults.filter(r => !existingUrls.has(r.source_url));
+          const existingUrls = new Set(historicalLeads?.map(r => r.source_url).filter(url => url && url.length > 0) || []);
+          const existingPhones = new Set(historicalLeads?.map(r => r.phone?.replace(/\D/g, '')).filter(p => p && p.length > 0) || []);
+
+          const trulyNewResults = validResults.filter(r => {
+            if (r.source_url && r.source_url.length > 0 && existingUrls.has(r.source_url)) return false;
+            if (r.phone) {
+              const normalizedPhone = r.phone.replace(/\D/g, '');
+              if (normalizedPhone && existingPhones.has(normalizedPhone)) return false;
+            }
+            return true;
+          });
 
           if (trulyNewResults.length > 0) {
             await supabase.from('results').insert(trulyNewResults);
@@ -319,12 +351,21 @@ router.post('/extend', async (req: Request, res: Response): Promise<void> => {
           console.log(`[search.ts] Inserting ${validResults.length} extended leads into results table...`);
           
           // GLOBAL DEDUPLICATION
-          const { data: existingResults } = await supabase
+          const { data: historicalLeads } = await supabase
             .from('results')
-            .select('source_url');
+            .select('source_url, phone');
           
-          const existingUrls = new Set(existingResults?.map(r => r.source_url) || []);
-          const trulyNewResults = validResults.filter(r => !existingUrls.has(r.source_url));
+          const existingUrls = new Set(historicalLeads?.map(r => r.source_url).filter(url => url && url.length > 0) || []);
+          const existingPhones = new Set(historicalLeads?.map(r => r.phone?.replace(/\D/g, '')).filter(p => p && p.length > 0) || []);
+
+          const trulyNewResults = validResults.filter(r => {
+            if (r.source_url && r.source_url.length > 0 && existingUrls.has(r.source_url)) return false;
+            if (r.phone) {
+              const normalizedPhone = r.phone.replace(/\D/g, '');
+              if (normalizedPhone && existingPhones.has(normalizedPhone)) return false;
+            }
+            return true;
+          });
 
           if (trulyNewResults.length > 0) {
             const { error: insertError } = await supabase.from('results').insert(trulyNewResults);
