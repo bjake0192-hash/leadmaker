@@ -72,11 +72,10 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
         if (validResults.length > 0) {
           console.log(`[search.ts] Inserting ${validResults.length} leads into results table...`);
           
-          // Deduplicate against any already existing results for this search (unlikely but safe)
+          // GLOBAL DEDUPLICATION: Don't pull leads that have been pulled in ANY search before
           const { data: existingResults } = await supabase
             .from('results')
-            .select('source_url')
-            .eq('search_id', search.id);
+            .select('source_url');
           
           const existingUrls = new Set(existingResults?.map(r => r.source_url) || []);
           const trulyNewResults = validResults.filter(r => !existingUrls.has(r.source_url));
@@ -88,7 +87,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
               throw insertError;
             }
           }
-          console.log('[search.ts] Successfully inserted leads.');
+          console.log(`[search.ts] Successfully inserted ${trulyNewResults.length} truly new leads.`);
         } else {
           console.log('[search.ts] No leads found to insert.');
         }
@@ -153,11 +152,10 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
         if (validResults.length > 0) {
           console.log(`[search.ts] Inserting ${validResults.length} leads into results table (Background)...`);
           
-          // Deduplicate
+          // GLOBAL DEDUPLICATION
           const { data: existingResults } = await supabase
             .from('results')
-            .select('source_url')
-            .eq('search_id', search.id);
+            .select('source_url');
           
           const existingUrls = new Set(existingResults?.map(r => r.source_url) || []);
           const trulyNewResults = validResults.filter(r => !existingUrls.has(r.source_url));
@@ -264,8 +262,7 @@ router.post('/extend', async (req: Request, res: Response): Promise<void> => {
         if (validResults.length > 0) {
           const { data: existingResults } = await supabase
             .from('results')
-            .select('source_url')
-            .eq('search_id', search.id);
+            .select('source_url');
           
           const existingUrls = new Set(existingResults?.map(r => r.source_url) || []);
           const trulyNewResults = validResults.filter(r => !existingUrls.has(r.source_url));
@@ -321,11 +318,10 @@ router.post('/extend', async (req: Request, res: Response): Promise<void> => {
         if (validResults.length > 0) {
           console.log(`[search.ts] Inserting ${validResults.length} extended leads into results table...`);
           
-          // Get existing source_urls for this search to avoid duplicates
+          // GLOBAL DEDUPLICATION
           const { data: existingResults } = await supabase
             .from('results')
-            .select('source_url')
-            .eq('search_id', search.id);
+            .select('source_url');
           
           const existingUrls = new Set(existingResults?.map(r => r.source_url) || []);
           const trulyNewResults = validResults.filter(r => !existingUrls.has(r.source_url));
