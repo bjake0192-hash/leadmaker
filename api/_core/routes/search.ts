@@ -5,7 +5,7 @@ import { PipelineOrchestrator } from '../pipeline/PipelineOrchestrator.js';
 const router = Router();
 
 router.post('/', async (req: Request, res: Response): Promise<void> => {
-  const { keyword, location, max_results = 10, query } = req.body;
+  const { keyword, location, max_results = 10, query, fastMode = false } = req.body;
 
   if (!keyword || !location) {
     res.status(400).json({ error: 'Keyword and location are required' });
@@ -17,7 +17,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
     const { data: search, error: createError } = await supabase
       .from('searches')
       .insert({
-        query: query || `${keyword} in ${location}`,
+        query: query || `${keyword} in ${location}${fastMode ? ' (Fast Mode)' : ''}`,
         max_results,
         status: 'pending'
       })
@@ -36,7 +36,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
     res.json({
       search_id: search.id,
       status: 'pending',
-      estimated_time: max_results * 10 // Pipeline processing takes time
+      estimated_time: fastMode ? 5 : max_results * 10 // Fast mode is much quicker
     });
 
     // 3. Start processing in background using the new Pipeline Orchestrator
@@ -55,6 +55,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
           keyword,
           location,
           maxResultsPerRegion: max_results,
+          fastMode,
         });
 
         // 4. Map pipeline leads to database schema

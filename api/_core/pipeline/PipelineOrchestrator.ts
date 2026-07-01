@@ -43,15 +43,22 @@ export class PipelineOrchestrator {
     console.log(`[Pipeline] ${uniqueLeads.length} unique leads remain.`);
 
     // 4. Processing Phase: Crawl -> Contacts
-    for (const lead of uniqueLeads) {
-      // 4a. Crawl
-      await this.crawler.crawl(lead);
-      
-      // 4b. Find Contacts
-      this.contactFinder.extractContacts(lead);
-      
-      // 4c. Collector: Store lead
-      this.collector.addLead(lead);
+    if (config.fastMode) {
+      console.log(`[Pipeline] Fast Mode enabled. Skipping website crawling and contact extraction.`);
+      for (const lead of uniqueLeads) {
+        this.collector.addLead(lead);
+      }
+    } else {
+      for (const lead of uniqueLeads) {
+        // 4a. Crawl
+        await this.crawler.crawl(lead);
+        
+        // 4b. Find Contacts
+        this.contactFinder.extractContacts(lead);
+        
+        // 4c. Collector: Store lead
+        this.collector.addLead(lead);
+      }
     }
 
     const finalLeads = this.collector.getAllLeads();

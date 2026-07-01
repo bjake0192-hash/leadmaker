@@ -36,4 +36,5 @@ export interface PipelineConfig {
   location: string;
   maxResultsPerRegion?: number;
   exportFormat?: 'csv' | 'excel' | 'google_sheets';
+  fastMode?: boolean;
 }

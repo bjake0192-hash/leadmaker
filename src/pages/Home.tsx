@@ -8,6 +8,7 @@ const Home: React.FC = () => {
   const [keyword, setKeyword] = useState('');
   const [location, setLocation] = useState('');
   const [maxResults, setMaxResults] = useState(10);
+  const [fastMode, setFastMode] = useState(true);
   const [loading, setLoading] = useState(false);
   const [recentSearches, setRecentSearches] = useState<Search[]>([]);
   const navigate = useNavigate();
@@ -37,7 +38,8 @@ const Home: React.FC = () => {
         query: `${keyword} in ${location}`,
         keyword,
         location,
-        max_results: maxResults
+        max_results: maxResults,
+        fastMode
       });
       
       const { search_id } = response.data;
@@ -119,6 +121,30 @@ const Home: React.FC = () => {
                   <option value={200}>200 results</option>
                   <option value={500}>500 results</option>
                 </select>
+              </div>
+
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 text-left mb-1">
+                  Search Speed
+                </label>
+                <div className="mt-1 flex items-center h-10">
+                  <button
+                    type="button"
+                    onClick={() => setFastMode(!fastMode)}
+                    className={`${
+                      fastMode ? 'bg-blue-600' : 'bg-gray-200'
+                    } relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                  >
+                    <span
+                      className={`${
+                        fastMode ? 'translate-x-5' : 'translate-x-0'
+                      } pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200`}
+                    />
+                  </button>
+                  <span className="ml-3 text-sm text-gray-500">
+                    {fastMode ? 'Fast Mode (Maps only)' : 'Deep Mode (Crawl sites)'}
+                  </span>
+                </div>
               </div>
               
               <div className="flex-none pt-6">
