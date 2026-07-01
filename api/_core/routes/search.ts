@@ -70,28 +70,38 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
         }));
 
         if (validResults.length > 0) {
-          console.log(`[search.ts] Inserting ${validResults.length} leads into results table...`);
+          console.log(`[search.ts] Performing global deduplication for ${validResults.length} leads...`);
           
-          // GLOBAL DEDUPLICATION: Check against ALL historical data in Supabase
-          const { data: historicalLeads } = await supabase
-            .from('results')
-            .select('source_url, phone');
+          const trulyNewResults = [];
           
-          const existingUrls = new Set(historicalLeads?.map(r => r.source_url).filter(url => url && url.length > 0) || []);
-          const existingPhones = new Set(historicalLeads?.map(r => r.phone?.replace(/\D/g, '')).filter(p => p && p.length > 0) || []);
-
-          const trulyNewResults = validResults.filter(r => {
-            // Check URL
-            if (r.source_url && r.source_url.length > 0 && existingUrls.has(r.source_url)) return false;
+          for (const r of validResults) {
+            // Check if this lead already exists in ANY previous search
+            const normalizedPhone = r.phone ? r.phone.replace(/\D/g, '') : null;
             
-            // Check Phone
-            if (r.phone) {
-              const normalizedPhone = r.phone.replace(/\D/g, '');
-              if (normalizedPhone && existingPhones.has(normalizedPhone)) return false;
+            let query = supabase.from('results').select('id');
+            
+            // Build a flexible OR filter to catch duplicates across any of these fields
+            const filters = [];
+            if (r.source_url && r.source_url.length > 0) {
+              filters.push(`source_url.eq.${r.source_url}`);
+            }
+            if (normalizedPhone && normalizedPhone.length > 0) {
+              // Note: This requires the DB to have normalized phones, 
+              // but we'll try a partial match as a safety measure.
+              filters.push(`phone.ilike.%${normalizedPhone}%`);
             }
             
-            return true;
-          });
+            // If we have neither URL nor phone, we must use Name + Address
+            if (filters.length === 0) {
+              filters.push(`and(name.eq."${r.name}",address.eq."${r.address}")`);
+            }
+
+            const { data: existing } = await query.or(filters.join(',')).limit(1);
+
+            if (!existing || existing.length === 0) {
+              trulyNewResults.push(r);
+            }
+          }
 
           if (trulyNewResults.length > 0) {
             const { error: insertError } = await supabase.from('results').insert(trulyNewResults);
@@ -163,24 +173,30 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
         }));
 
         if (validResults.length > 0) {
-          console.log(`[search.ts] Inserting ${validResults.length} leads into results table (Background)...`);
+          console.log(`[search.ts] Performing global deduplication for ${validResults.length} leads (Background)...`);
           
-          // GLOBAL DEDUPLICATION
-          const { data: historicalLeads } = await supabase
-            .from('results')
-            .select('source_url, phone');
+          const trulyNewResults = [];
           
-          const existingUrls = new Set(historicalLeads?.map(r => r.source_url).filter(url => url && url.length > 0) || []);
-          const existingPhones = new Set(historicalLeads?.map(r => r.phone?.replace(/\D/g, '')).filter(p => p && p.length > 0) || []);
-
-          const trulyNewResults = validResults.filter(r => {
-            if (r.source_url && r.source_url.length > 0 && existingUrls.has(r.source_url)) return false;
-            if (r.phone) {
-              const normalizedPhone = r.phone.replace(/\D/g, '');
-              if (normalizedPhone && existingPhones.has(normalizedPhone)) return false;
+          for (const r of validResults) {
+            const normalizedPhone = r.phone ? r.phone.replace(/\D/g, '') : null;
+            let query = supabase.from('results').select('id');
+            const filters = [];
+            
+            if (r.source_url && r.source_url.length > 0) {
+              filters.push(`source_url.eq.${r.source_url}`);
             }
-            return true;
-          });
+            if (normalizedPhone && normalizedPhone.length > 0) {
+              filters.push(`phone.ilike.%${normalizedPhone}%`);
+            }
+            if (filters.length === 0) {
+              filters.push(`and(name.eq."${r.name}",address.eq."${r.address}")`);
+            }
+
+            const { data: existing } = await query.or(filters.join(',')).limit(1);
+            if (!existing || existing.length === 0) {
+              trulyNewResults.push(r);
+            }
+          }
 
           if (trulyNewResults.length > 0) {
             const { error: insertError } = await supabase.from('results').insert(trulyNewResults);
@@ -282,22 +298,30 @@ router.post('/extend', async (req: Request, res: Response): Promise<void> => {
         }));
 
         if (validResults.length > 0) {
-          // GLOBAL DEDUPLICATION
-          const { data: historicalLeads } = await supabase
-            .from('results')
-            .select('source_url, phone');
+          console.log(`[search.ts] Performing global deduplication for ${validResults.length} extended leads...`);
           
-          const existingUrls = new Set(historicalLeads?.map(r => r.source_url).filter(url => url && url.length > 0) || []);
-          const existingPhones = new Set(historicalLeads?.map(r => r.phone?.replace(/\D/g, '')).filter(p => p && p.length > 0) || []);
-
-          const trulyNewResults = validResults.filter(r => {
-            if (r.source_url && r.source_url.length > 0 && existingUrls.has(r.source_url)) return false;
-            if (r.phone) {
-              const normalizedPhone = r.phone.replace(/\D/g, '');
-              if (normalizedPhone && existingPhones.has(normalizedPhone)) return false;
+          const trulyNewResults = [];
+          
+          for (const r of validResults) {
+            const normalizedPhone = r.phone ? r.phone.replace(/\D/g, '') : null;
+            let query = supabase.from('results').select('id');
+            const filters = [];
+            
+            if (r.source_url && r.source_url.length > 0) {
+              filters.push(`source_url.eq.${r.source_url}`);
             }
-            return true;
-          });
+            if (normalizedPhone && normalizedPhone.length > 0) {
+              filters.push(`phone.ilike.%${normalizedPhone}%`);
+            }
+            if (filters.length === 0) {
+              filters.push(`and(name.eq."${r.name}",address.eq."${r.address}")`);
+            }
+
+            const { data: existing } = await query.or(filters.join(',')).limit(1);
+            if (!existing || existing.length === 0) {
+              trulyNewResults.push(r);
+            }
+          }
 
           if (trulyNewResults.length > 0) {
             await supabase.from('results').insert(trulyNewResults);
@@ -348,24 +372,30 @@ router.post('/extend', async (req: Request, res: Response): Promise<void> => {
         }));
 
         if (validResults.length > 0) {
-          console.log(`[search.ts] Inserting ${validResults.length} extended leads into results table...`);
+          console.log(`[search.ts] Performing global deduplication for ${validResults.length} extended leads (Background)...`);
           
-          // GLOBAL DEDUPLICATION
-          const { data: historicalLeads } = await supabase
-            .from('results')
-            .select('source_url, phone');
+          const trulyNewResults = [];
           
-          const existingUrls = new Set(historicalLeads?.map(r => r.source_url).filter(url => url && url.length > 0) || []);
-          const existingPhones = new Set(historicalLeads?.map(r => r.phone?.replace(/\D/g, '')).filter(p => p && p.length > 0) || []);
-
-          const trulyNewResults = validResults.filter(r => {
-            if (r.source_url && r.source_url.length > 0 && existingUrls.has(r.source_url)) return false;
-            if (r.phone) {
-              const normalizedPhone = r.phone.replace(/\D/g, '');
-              if (normalizedPhone && existingPhones.has(normalizedPhone)) return false;
+          for (const r of validResults) {
+            const normalizedPhone = r.phone ? r.phone.replace(/\D/g, '') : null;
+            let query = supabase.from('results').select('id');
+            const filters = [];
+            
+            if (r.source_url && r.source_url.length > 0) {
+              filters.push(`source_url.eq.${r.source_url}`);
             }
-            return true;
-          });
+            if (normalizedPhone && normalizedPhone.length > 0) {
+              filters.push(`phone.ilike.%${normalizedPhone}%`);
+            }
+            if (filters.length === 0) {
+              filters.push(`and(name.eq."${r.name}",address.eq."${r.address}")`);
+            }
+
+            const { data: existing } = await query.or(filters.join(',')).limit(1);
+            if (!existing || existing.length === 0) {
+              trulyNewResults.push(r);
+            }
+          }
 
           if (trulyNewResults.length > 0) {
             const { error: insertError } = await supabase.from('results').insert(trulyNewResults);
