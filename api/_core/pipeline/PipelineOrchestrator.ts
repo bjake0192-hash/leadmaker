@@ -65,8 +65,8 @@ export class PipelineOrchestrator {
       uniqueLeads = uniqueLeads.filter(lead => lead.phones && lead.phones.length > 0);
     }
 
-    // If we're in background mode and still haven't hit the target, try one more page
-    // (We limit to 2 pages total to avoid hitting SerpApi/Serper limits too hard in one go)
+    // STABILITY FIX: Only fetch second page if we are NOT in Fast Mode
+    // Fast Mode must return quickly to avoid Vercel timeouts.
     if (!config.fastMode && uniqueLeads.length < target && currentPage < startPage + 1) {
       console.log(`[Pipeline] Only found ${uniqueLeads.length}/${target} leads. Fetching next page...`);
       currentPage++;

@@ -110,6 +110,10 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
       } catch (error) {
         console.error('Fast mode error:', error);
         // Fallback to background if it fails or takes too long
+        await supabase
+          .from('searches')
+          .update({ status: 'failed', filters: { ...search.filters, error: 'Fast mode timeout' } })
+          .eq('id', search.id);
       }
     }
 
