@@ -32,14 +32,23 @@ const BLOCKED_DOMAINS = [
 export const searchGoogle = async (query: string, numResults: number = 10): Promise<SearchResult[]> => {
   console.log(`Starting search for: "${query}" with target results: ${numResults}`);
   
-  // Since the user wants highly accurate results specifically from Maps (including categories),
-  // we will use the SerpApi Google Maps engine if the SERPAPI_KEY is available.
+  // 1. Try Serper.dev first (Most generous free tier: 2500 requests)
+  const serperApiKey = process.env.SERPER_API_KEY;
+  if (serperApiKey && serperApiKey !== 'your_serper_api_key_here') {
+      try {
+          return await searchSerperMaps(query, numResults, serperApiKey);
+      } catch (e) {
+          console.error("Serper.dev search failed, falling back...");
+      }
+  }
+
+  // 2. Fallback to SerpApi if available
   const serpapiKey = process.env.SERPAPI_KEY;
   if (serpapiKey && serpapiKey !== 'your_serpapi_key_here') {
       return searchGoogleMaps(query, numResults, serpapiKey);
   }
   
-  console.log("No valid SERPAPI_KEY found. Falling back to DuckDuckGo/Bing web search.");
+  console.log("No valid API keys found. Falling back to DuckDuckGo/Bing web search.");
   
   // Increase search limit internally to account for filtered results
   // We need to fetch significantly more because filtering might remove 80-90% of results
@@ -111,6 +120,58 @@ export const searchGoogle = async (query: string, numResults: number = 10): Prom
     console.error('Search failed:', error);
     throw error;
   }
+};
+
+// Google Maps Scraper using Serper.dev
+const searchSerperMaps = async (query: string, limit: number, apiKey: string): Promise<SearchResult[]> => {
+    console.log(`Searching Google Maps via Serper.dev for "${query}"`);
+    const results: SearchResult[] = [];
+    
+    try {
+        const response = await axios.post('https://google.serper.dev/maps', {
+            q: query,
+            num: limit
+        }, {
+            headers: {
+                'X-API-KEY': apiKey,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.data.maps && Array.isArray(response.data.maps)) {
+            for (const place of response.data.maps) {
+                if (results.length >= limit) break;
+                
+                // Only include businesses that actually have a website
+                if (place.website) {
+                    try {
+                        const domain = new URL(place.website).hostname.toLowerCase().replace('www.', '');
+                        if (BLOCKED_DOMAINS.some(blocked => domain.includes(blocked))) {
+                            continue;
+                        }
+                    } catch (e) {
+                        continue;
+                    }
+
+                    results.push({
+                        title: place.title,
+                        link: place.website,
+                        snippet: place.category || place.address || '',
+                        source: 'serper_maps',
+                        phone: place.phoneNumber,
+                        address: place.address,
+                        type: place.category
+                    });
+                }
+            }
+        }
+        console.log(`Serper.dev returned ${results.length} valid results with websites.`);
+    } catch (error) {
+        console.error("Serper.dev Google Maps search failed:", error);
+        throw error;
+    }
+    
+    return results;
 };
 
 // Google Maps Scraper using SerpApi
