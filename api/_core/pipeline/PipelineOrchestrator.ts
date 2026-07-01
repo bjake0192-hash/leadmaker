@@ -33,8 +33,16 @@ export class PipelineOrchestrator {
     
     // Divide max results by regions to be efficient with credits
     const totalMax = config.maxResultsPerRegion || 10;
-    const limitPerRegion = Math.max(Math.ceil(totalMax / regions.length), 10);
+    let limitPerRegion = Math.max(Math.ceil(totalMax / regions.length), 20);
     
+    // If phone is required, fetch more results per region to compensate for filtering
+    if (config.requirePhone) {
+      limitPerRegion = limitPerRegion * 3; // Fetch 3x more to find enough with phones
+    }
+    
+    // Cap at 100 per region per page to avoid API limits/timeouts
+    limitPerRegion = Math.min(limitPerRegion, 100);
+
     const regionPromises = regions.map(region => 
       this.searchWorker.searchRegion(config.keyword, region, limitPerRegion, config.page || 1)
     );

@@ -71,10 +71,22 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
 
         if (validResults.length > 0) {
           console.log(`[search.ts] Inserting ${validResults.length} leads into results table...`);
-          const { error: insertError } = await supabase.from('results').insert(validResults);
-          if (insertError) {
-            console.error('[search.ts] Error inserting results:', insertError);
-            throw insertError;
+          
+          // Deduplicate against any already existing results for this search (unlikely but safe)
+          const { data: existingResults } = await supabase
+            .from('results')
+            .select('source_url')
+            .eq('search_id', search.id);
+          
+          const existingUrls = new Set(existingResults?.map(r => r.source_url) || []);
+          const trulyNewResults = validResults.filter(r => !existingUrls.has(r.source_url));
+
+          if (trulyNewResults.length > 0) {
+            const { error: insertError } = await supabase.from('results').insert(trulyNewResults);
+            if (insertError) {
+              console.error('[search.ts] Error inserting results:', insertError);
+              throw insertError;
+            }
           }
           console.log('[search.ts] Successfully inserted leads.');
         } else {
@@ -136,10 +148,22 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
 
         if (validResults.length > 0) {
           console.log(`[search.ts] Inserting ${validResults.length} leads into results table (Background)...`);
-          const { error: insertError } = await supabase.from('results').insert(validResults);
-          if (insertError) {
-            console.error('[search.ts] Error inserting results (Background):', insertError);
-            throw insertError;
+          
+          // Deduplicate
+          const { data: existingResults } = await supabase
+            .from('results')
+            .select('source_url')
+            .eq('search_id', search.id);
+          
+          const existingUrls = new Set(existingResults?.map(r => r.source_url) || []);
+          const trulyNewResults = validResults.filter(r => !existingUrls.has(r.source_url));
+
+          if (trulyNewResults.length > 0) {
+            const { error: insertError } = await supabase.from('results').insert(trulyNewResults);
+            if (insertError) {
+              console.error('[search.ts] Error inserting results (Background):', insertError);
+              throw insertError;
+            }
           }
         } else {
           console.log('[search.ts] No leads found to insert (Background).');
@@ -167,8 +191,6 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
-
-export default router;
 
 router.post('/extend', async (req: Request, res: Response): Promise<void> => {
   const { search_id } = req.body;
@@ -236,11 +258,21 @@ router.post('/extend', async (req: Request, res: Response): Promise<void> => {
 
         if (validResults.length > 0) {
           console.log(`[search.ts] Inserting ${validResults.length} extended leads into results table...`);
-          // Deduplicate by source_url to avoid double-inserting if Map results overlap
-          // Though PipelineOrchestrator should handle this, double-checking is safe.
-          const { error: insertError } = await supabase.from('results').insert(validResults);
-          if (insertError) {
-             console.error('[search.ts] Error inserting extended results:', insertError);
+          
+          // Get existing source_urls for this search to avoid duplicates
+          const { data: existingResults } = await supabase
+            .from('results')
+            .select('source_url')
+            .eq('search_id', search.id);
+          
+          const existingUrls = new Set(existingResults?.map(r => r.source_url) || []);
+          const trulyNewResults = validResults.filter(r => !existingUrls.has(r.source_url));
+
+          if (trulyNewResults.length > 0) {
+            const { error: insertError } = await supabase.from('results').insert(trulyNewResults);
+            if (insertError) {
+               console.error('[search.ts] Error inserting extended results:', insertError);
+            }
           }
         }
 
@@ -272,3 +304,5 @@ router.post('/extend', async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+export default router;

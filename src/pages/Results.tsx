@@ -216,7 +216,9 @@ const Results: React.FC = () => {
                       <div className="h-12 w-12 bg-slate-50 rounded-2xl flex items-center justify-center">
                         <Loader2 className="h-6 w-6 text-slate-300 animate-spin" />
                       </div>
-                      <p className="text-slate-400 font-bold text-lg">Gathering intel...</p>
+                      <p className="text-slate-400 font-bold text-lg">
+                        {search.status === 'processing' ? 'Searching for more leads...' : 'Gathering intel...'}
+                      </p>
                       <p className="text-slate-300 text-sm">New leads will appear here in real-time.</p>
                     </div>
                   </td>
