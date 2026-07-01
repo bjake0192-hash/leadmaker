@@ -56,46 +56,55 @@ const Home: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl w-full space-y-8 text-center">
-        <div>
-          <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight lg:text-6xl">
-            Extract Data from Google
+      <div className="max-w-4xl w-full space-y-12 text-center">
+        <div className="space-y-4">
+          <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-sm font-semibold tracking-wide uppercase shadow-[0_0_15px_rgba(37,99,235,0.1)]">
+            <span className="relative flex h-2 w-2 mr-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
+            </span>
+            Next-Gen Lead Generation
+          </div>
+          <h1 className="text-5xl font-extrabold text-slate-900 sm:text-6xl tracking-tight">
+            Build your pipeline with <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">OpenLead</span>
           </h1>
-          <p className="mt-5 max-w-xl mx-auto text-xl text-gray-500">
-            Search for any term and scrape names, emails, and company information instantly.
+          <p className="mt-5 max-w-2xl mx-auto text-xl text-slate-500 font-medium">
+            Search, extract, and enrich B2B leads from Google Maps instantly. The most accurate data for your sales team.
           </p>
         </div>
 
-        <div className="mt-10 bg-white p-8 rounded-xl shadow-lg border border-gray-100">
-          <form onSubmit={handleSearch} className="space-y-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <label htmlFor="keyword" className="block text-sm font-medium text-gray-700 text-left mb-1">Keyword</label>
-                <div className="relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <SearchIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+        <div className="mt-10 bg-white p-10 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-100 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600"></div>
+          
+          <form onSubmit={handleSearch} className="space-y-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="text-left space-y-2">
+                <label htmlFor="keyword" className="block text-sm font-bold text-slate-700 ml-1">Keyword</label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <SearchIcon className="h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
                   </div>
                   <input
                     type="text"
                     name="keyword"
                     id="keyword"
-                    className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-lg border-gray-300 rounded-lg py-3"
-                    placeholder="e.g. factory"
+                    className="focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 block w-full pl-12 text-lg border-slate-200 rounded-2xl py-4 transition-all bg-slate-50 focus:bg-white"
+                    placeholder="e.g. Manufacturing"
                     value={keyword}
                     onChange={(e) => setKeyword(e.target.value)}
                     required
                   />
                 </div>
               </div>
-              <div className="flex-1">
-                <label htmlFor="location" className="block text-sm font-medium text-gray-700 text-left mb-1">Location</label>
-                <div className="relative rounded-md shadow-sm">
+              <div className="text-left space-y-2">
+                <label htmlFor="location" className="block text-sm font-bold text-slate-700 ml-1">Location</label>
+                <div className="relative group">
                   <input
                     type="text"
                     name="location"
                     id="location"
-                    className="focus:ring-blue-500 focus:border-blue-500 block w-full px-4 sm:text-lg border-gray-300 rounded-lg py-3"
-                    placeholder="e.g. UK"
+                    className="focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 block w-full px-5 text-lg border-slate-200 rounded-2xl py-4 transition-all bg-slate-50 focus:bg-white"
+                    placeholder="e.g. London, UK"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     required
@@ -105,14 +114,14 @@ const Home: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
-              <div>
-                <label htmlFor="maxResults" className="block text-sm font-medium text-gray-700 text-left mb-1">
+              <div className="text-left space-y-2">
+                <label htmlFor="maxResults" className="block text-sm font-bold text-slate-700 ml-1">
                   Max Results
                 </label>
                 <select
                   id="maxResults"
                   name="maxResults"
-                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                  className="mt-1 block w-full pl-4 pr-10 py-3 text-base border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 sm:text-sm rounded-2xl bg-slate-50 focus:bg-white transition-all"
                   value={maxResults}
                   onChange={(e) => setMaxResults(Number(e.target.value))}
                 >
@@ -125,17 +134,17 @@ const Home: React.FC = () => {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 text-left mb-1">
+              <div className="text-left space-y-2">
+                <label className="block text-sm font-bold text-slate-700 ml-1">
                   Search Speed
                 </label>
-                <div className="mt-1 flex items-center h-10">
+                <div className="mt-1 flex items-center h-12 bg-slate-50 rounded-2xl px-4 border border-slate-100">
                   <button
                     type="button"
                     onClick={() => setFastMode(!fastMode)}
                     className={`${
-                      fastMode ? 'bg-blue-600' : 'bg-gray-200'
-                    } relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                      fastMode ? 'bg-blue-600' : 'bg-slate-300'
+                    } relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none shadow-sm`}
                   >
                     <span
                       className={`${
@@ -143,23 +152,23 @@ const Home: React.FC = () => {
                       } pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200`}
                     />
                   </button>
-                  <span className="ml-3 text-sm text-gray-500">
+                  <span className="ml-3 text-sm font-semibold text-slate-600">
                     {fastMode ? 'Fast' : 'Deep'}
                   </span>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 text-left mb-1">
+              <div className="text-left space-y-2">
+                <label className="block text-sm font-bold text-slate-700 ml-1">
                   Contact Filtering
                 </label>
-                <div className="mt-1 flex items-center h-10">
+                <div className="mt-1 flex items-center h-12 bg-slate-50 rounded-2xl px-4 border border-slate-100">
                   <button
                     type="button"
                     onClick={() => setRequirePhone(!requirePhone)}
                     className={`${
-                      requirePhone ? 'bg-blue-600' : 'bg-gray-200'
-                    } relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                      requirePhone ? 'bg-blue-600' : 'bg-slate-300'
+                    } relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none shadow-sm`}
                   >
                     <span
                       className={`${
@@ -167,7 +176,7 @@ const Home: React.FC = () => {
                       } pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200`}
                     />
                   </button>
-                  <span className="ml-3 text-sm text-gray-500">
+                  <span className="ml-3 text-sm font-semibold text-slate-600">
                     {requirePhone ? 'Phone Only' : 'All Leads'}
                   </span>
                 </div>
@@ -177,17 +186,17 @@ const Home: React.FC = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  className={`w-full inline-flex items-center justify-center px-6 py-4 border border-transparent text-lg font-bold rounded-2xl shadow-[0_10px_20px_rgba(37,99,235,0.2)] text-white bg-blue-600 hover:bg-blue-700 hover:shadow-[0_15px_25px_rgba(37,99,235,0.3)] focus:outline-none transition-all duration-300 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
                   {loading ? (
                     <>
-                      <Loader2 className="animate-spin -ml-1 mr-2 h-5 w-5" />
-                      Searching...
+                      <Loader2 className="animate-spin -ml-1 mr-2 h-6 w-6" />
+                      Initializing...
                     </>
                   ) : (
                     <>
-                      Start Scraping
-                      <ArrowRight className="ml-2 -mr-1 h-5 w-5" />
+                      Start Pipeline
+                      <ArrowRight className="ml-2 -mr-1 h-6 w-6" />
                     </>
                   )}
                 </button>
@@ -197,46 +206,39 @@ const Home: React.FC = () => {
         </div>
 
         {recentSearches.length > 0 && (
-          <div className="mt-12 text-left">
-            <h2 className="text-lg font-medium text-gray-900 flex items-center mb-4">
-              <History className="mr-2 h-5 w-5 text-gray-500" />
-              Recent Searches
+          <div className="mt-16 text-left space-y-6">
+            <h2 className="text-xl font-bold text-slate-900 flex items-center px-2">
+              <History className="mr-3 h-6 w-6 text-blue-600" />
+              Recent Extractions
             </h2>
-            <div className="bg-white shadow overflow-hidden sm:rounded-md">
-              <ul className="divide-y divide-gray-200">
-                {recentSearches.map((search) => (
-                  <li key={search.id}>
-                    <button
-                      onClick={() => navigate(`/results/${search.id}`)}
-                      className="block hover:bg-gray-50 w-full text-left px-4 py-4 sm:px-6 transition duration-150 ease-in-out"
-                    >
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-blue-600 truncate">{search.query}</p>
-                        <div className="ml-2 flex-shrink-0 flex">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                            ${search.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                              search.status === 'failed' ? 'bg-red-100 text-red-800' : 
-                              'bg-yellow-100 text-yellow-800'}`}>
-                            {search.status}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="mt-2 sm:flex sm:justify-between">
-                        <div className="sm:flex">
-                          <p className="flex items-center text-sm text-gray-500">
-                            {search.max_results} results requested
-                          </p>
-                        </div>
-                        <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                          <p>
-                            {new Date(search.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                    </button>
-                  </li>
-                ))}
-              </ul>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {recentSearches.map((search) => (
+                <button
+                  key={search.id}
+                  onClick={() => navigate(`/results/${search.id}`)}
+                  className="group bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:border-blue-100 text-left transition-all duration-300 relative overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 p-4">
+                    <div className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full shadow-sm
+                      ${search.status === 'completed' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 
+                        search.status === 'failed' ? 'bg-rose-50 text-rose-600 border border-rose-100' : 
+                        'bg-amber-50 text-amber-600 border border-amber-100'}`}>
+                      {search.status}
+                    </div>
+                  </div>
+                  <p className="text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1 pr-16">{search.query}</p>
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-tighter">Results</span>
+                      <span className="text-sm font-bold text-slate-700">{search.max_results}</span>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-tighter">Date</span>
+                      <span className="text-sm font-bold text-slate-700">{new Date(search.created_at).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
         )}

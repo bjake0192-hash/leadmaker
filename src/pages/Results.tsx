@@ -96,40 +96,43 @@ const Results: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="bg-white shadow rounded-lg p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+      <div className="bg-white shadow-[0_10px_40px_rgba(0,0,0,0.04)] rounded-3xl p-8 border border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-6 sm:space-y-0 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-1 h-full bg-blue-600"></div>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Search Results</h1>
-          <p className="text-gray-500 mt-1">
-            Query: <span className="font-medium text-gray-900">{search.query}</span>
-          </p>
-          <div className="mt-2 flex items-center space-x-2">
-            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-              ${search.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                search.status === 'failed' ? 'bg-red-100 text-red-800' : 
-                'bg-yellow-100 text-yellow-800'}`}>
-              {search.status.charAt(0).toUpperCase() + search.status.slice(1)}
-            </span>
-            <span className="text-sm text-gray-500">
-              {total} results found
-            </span>
+          <div className="flex items-center space-x-3 mb-2">
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Extraction Pipeline</h1>
             {(search.status === 'pending' || search.status === 'processing') && (
-               <Loader2 className="animate-spin h-4 w-4 text-blue-600" />
+               <Loader2 className="animate-spin h-5 w-5 text-blue-600" />
             )}
+          </div>
+          <p className="text-slate-500 font-medium text-lg">
+            Query: <span className="text-blue-600 font-bold">{search.query}</span>
+          </p>
+          <div className="mt-4 flex items-center space-x-3">
+            <span className={`px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-full shadow-sm
+              ${search.status === 'completed' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 
+                search.status === 'failed' ? 'bg-rose-50 text-rose-600 border border-rose-100' : 
+                'bg-amber-50 text-amber-600 border border-amber-100'}`}>
+              {search.status}
+            </span>
+            <span className="text-sm font-bold text-slate-400">
+              <span className="text-slate-900">{total}</span> total leads discovered
+            </span>
           </div>
         </div>
         
-        <div className="flex space-x-2">
+        <div className="flex items-center space-x-3 w-full sm:w-auto">
           <button
             onClick={handlePullMore}
             disabled={extending || search.status === 'processing'}
-            className={`inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${extending || search.status === 'processing' ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-3 border border-slate-200 text-sm font-bold rounded-2xl shadow-sm text-slate-700 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all duration-200 ${extending || search.status === 'processing' ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {extending || search.status === 'processing' ? (
               <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
             ) : (
-              <Download className="-ml-1 mr-2 h-4 w-4 transform rotate-180" />
+              <Download className="-ml-1 mr-2 h-4 w-4 transform rotate-180 text-blue-600" />
             )}
             Pull More
           </button>
@@ -137,79 +140,85 @@ const Results: React.FC = () => {
           <button
             onClick={handleExport}
             disabled={exporting || total === 0}
-            className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${exporting || total === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-3 border border-transparent text-sm font-bold rounded-2xl shadow-[0_10px_20px_rgba(37,99,235,0.15)] text-white bg-blue-600 hover:bg-blue-700 hover:shadow-[0_15px_25px_rgba(37,99,235,0.25)] transition-all duration-300 ${exporting || total === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {exporting ? (
               <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
             ) : (
               <Download className="-ml-1 mr-2 h-4 w-4" />
             )}
-            Export to Excel
+            Export Results
           </button>
         </div>
       </div>
 
       {/* Results Table */}
-      <div className="bg-white shadow rounded-lg overflow-hidden">
+      <div className="bg-white shadow-[0_10px_40px_rgba(0,0,0,0.03)] rounded-3xl overflow-hidden border border-slate-100">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-slate-100">
+            <thead className="bg-slate-50/50">
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Name
+                <th scope="col" className="px-8 py-5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Lead Name
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Phone
+                <th scope="col" className="px-8 py-5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Contact Number
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Email
+                <th scope="col" className="px-8 py-5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Email Address
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Address
+                <th scope="col" className="px-8 py-5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Physical Location
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Source
+                <th scope="col" className="px-8 py-5 text-right text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Action
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-slate-50">
               {results.length > 0 ? (
                 results.map((result) => (
-                  <tr key={result.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <tr key={result.id} className="hover:bg-slate-50/80 transition-colors group">
+                    <td className="px-8 py-5 whitespace-nowrap text-sm font-bold text-slate-900">
                       {result.name || '-'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-8 py-5 whitespace-nowrap text-sm font-semibold text-slate-600">
                       {result.phone || '-'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-8 py-5 whitespace-nowrap text-sm font-medium">
                       {result.email ? (
-                        <a href={`mailto:${result.email}`} className="text-blue-600 hover:underline">
+                        <a href={`mailto:${result.email}`} className="text-blue-600 hover:text-blue-700 underline decoration-blue-600/30 underline-offset-4">
                           {result.email}
                         </a>
                       ) : (
-                        '-'
+                        <span className="text-slate-300">-</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                    <td className="px-8 py-5 text-sm font-medium text-slate-500 max-w-xs truncate">
                       {result.address || '-'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-8 py-5 whitespace-nowrap text-right">
                       <a 
                         href={result.source_url} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 inline-flex items-center"
+                        className="inline-flex items-center px-4 py-2 rounded-xl text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-100 transition-all duration-200"
                       >
-                        Visit <ExternalLink className="ml-1 h-3 w-3" />
+                        View Source <ExternalLink className="ml-2 h-3 w-3" />
                       </a>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
-                    No results found yet.
+                  <td colSpan={5} className="px-8 py-20 text-center">
+                    <div className="flex flex-col items-center justify-center space-y-3">
+                      <div className="h-12 w-12 bg-slate-50 rounded-2xl flex items-center justify-center">
+                        <Loader2 className="h-6 w-6 text-slate-300 animate-spin" />
+                      </div>
+                      <p className="text-slate-400 font-bold text-lg">Gathering intel...</p>
+                      <p className="text-slate-300 text-sm">New leads will appear here in real-time.</p>
+                    </div>
                   </td>
                 </tr>
               )}
@@ -219,33 +228,30 @@ const Results: React.FC = () => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+          <div className="bg-slate-50/50 px-8 py-5 flex items-center justify-between border-t border-slate-100">
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm text-gray-700">
-                  Showing <span className="font-medium">{(page - 1) * limit + 1}</span> to <span className="font-medium">{Math.min(page * limit, total)}</span> of <span className="font-medium">{total}</span> results
+                <p className="text-sm font-bold text-slate-500">
+                  Showing <span className="text-slate-900">{(page - 1) * limit + 1}</span> to <span className="text-slate-900">{Math.min(page * limit, total)}</span> of <span className="text-slate-900">{total}</span> leads
                 </p>
               </div>
               <div>
-                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                <nav className="relative z-0 inline-flex rounded-2xl shadow-sm space-x-2" aria-label="Pagination">
                   <button
                     onClick={() => setPage(p => Math.max(1, p - 1))}
                     disabled={page === 1}
-                    className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${page === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`relative inline-flex items-center px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-500 hover:bg-slate-50 transition-all ${page === 1 ? 'opacity-30 cursor-not-allowed' : ''}`}
                   >
-                    <span className="sr-only">Previous</span>
                     <ChevronLeft className="h-5 w-5" aria-hidden="true" />
                   </button>
-                  {/* Simple pagination: show current page */}
-                  <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-                    Page {page} of {totalPages}
+                  <span className="relative inline-flex items-center px-6 py-2 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 shadow-sm">
+                    Page {page} / {totalPages}
                   </span>
                   <button
                     onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages}
-                    className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${page === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`relative inline-flex items-center px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-500 hover:bg-slate-50 transition-all ${page === totalPages ? 'opacity-30 cursor-not-allowed' : ''}`}
                   >
-                    <span className="sr-only">Next</span>
                     <ChevronRight className="h-5 w-5" aria-hidden="true" />
                   </button>
                 </nav>
