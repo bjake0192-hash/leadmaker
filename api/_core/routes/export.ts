@@ -12,7 +12,7 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
     // Get all results for this search
     const { data: results, error } = await supabase
       .from('results')
-      .select('name, email, company, source_url')
+      .select('name, phone, email, address, company, source_url')
       .eq('search_id', id);
 
     if (error) {
