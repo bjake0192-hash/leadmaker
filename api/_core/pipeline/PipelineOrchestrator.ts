@@ -24,6 +24,9 @@ export class PipelineOrchestrator {
   public async run(config: PipelineConfig): Promise<Lead[]> {
     console.log(`[Pipeline] Starting pipeline for keyword: "${config.keyword}" in "${config.location}" (Target: ${config.targetTotal})`);
 
+    const target = config.targetTotal || 10;
+    const startPage = config.page || 1;
+
     // 1. Map/Grid Worker: Break location into regions
     // STABILITY FIX: Use quick mode (major cities only) for the first page
     // to ensure a response within Vercel's 10s timeout.
@@ -33,8 +36,6 @@ export class PipelineOrchestrator {
     // 2. Search Worker: Search each region in parallel for speed
     console.log(`[Pipeline] Searching ${regions.length} regions in parallel...`);
     
-    const target = config.targetTotal || 10;
-    const startPage = config.page || 1;
     let allDiscoveredLeads: Lead[] = [];
     let currentPage = startPage;
     let leadsNeeded = target;
