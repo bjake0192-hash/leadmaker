@@ -45,13 +45,30 @@ export class PipelineOrchestrator {
       // We'll fetch the maximum (100) per region if the target is high.
       const limitPerRegion = config.requirePhone ? 100 : Math.max(Math.ceil(leadsNeeded / regions.length), 20);
       
-      console.log(`[Pipeline] Fetching page ${page} with limit ${limitPerRegion} per region...`);
-      const regionPromises = regions.map(region => 
-        this.searchWorker.searchRegion(config.keyword, region, limitPerRegion, page)
-      );
+      console.log(`[Pipeline] Fetching page ${page} with limit ${limitPerRegion} per region for ${regions.length} regions...`);
       
-      const resultsArray = await Promise.all(regionPromises);
-      return resultsArray.flat();
+      // Batch regions to avoid hitting rate limits or timeouts too quickly
+      const batchSize = 15;
+      const allResults: Lead[] = [];
+      
+      for (let i = 0; i < regions.length; i += batchSize) {
+        const batch = regions.slice(i, i + batchSize);
+        console.log(`[Pipeline] Searching batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(regions.length / batchSize)}...`);
+        
+        const regionPromises = batch.map(region => 
+          this.searchWorker.searchRegion(config.keyword, region, limitPerRegion, page)
+        );
+        
+        const resultsArray = await Promise.all(regionPromises);
+        allResults.push(...resultsArray.flat());
+        
+        // Short pause between batches if there are many regions
+        if (i + batchSize < regions.length) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+      
+      return allResults;
     };
 
     // First burst

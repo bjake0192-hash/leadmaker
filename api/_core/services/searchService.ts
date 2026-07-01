@@ -222,28 +222,30 @@ const searchGoogleMaps = async (query: string, limit: number, apiKey: string, pa
             for (const place of response.local_results) {
                 if (results.length >= limit) break;
                 
-                // Only include businesses that actually have a website
-                if (place.website) {
-                    // Check if it's a blocked directory domain just in case
+                // Use website if available, otherwise empty string
+                const link = place.website || '';
+                
+                // If they have a website, check against blocklist
+                if (link) {
                     try {
-                        const domain = new URL(place.website).hostname.toLowerCase().replace('www.', '');
+                        const domain = new URL(link).hostname.toLowerCase().replace('www.', '');
                         if (BLOCKED_DOMAINS.some(blocked => domain.includes(blocked))) {
                             continue;
                         }
                     } catch (e) {
-                        continue;
+                        // Keep if URL is weird but not blocked
                     }
-
-                    results.push({
-                        title: place.title,
-                        link: place.website,
-                        snippet: place.description || place.type || '',
-                        source: 'google_maps',
-                        phone: place.phone,
-                        address: place.address,
-                        type: place.type
-                    });
                 }
+
+                results.push({
+                    title: place.title,
+                    link: link,
+                    snippet: place.description || place.type || '',
+                    source: 'google_maps',
+                    phone: place.phone,
+                    address: place.address,
+                    type: place.type
+                });
             }
         }
         console.log(`Google Maps returned ${results.length} valid results with websites.`);
