@@ -42,6 +42,35 @@ export class MapGridWorker {
       ];
     }
 
+    // Specialized Grid for Scotland
+    if (normalizedLoc === 'scotland') {
+      return [
+        { name: 'Glasgow, Scotland' }, { name: 'Edinburgh, Scotland' }, { name: 'Aberdeen, Scotland' },
+        { name: 'Dundee, Scotland' }, { name: 'Inverness, Scotland' }, { name: 'Perth, Scotland' },
+        { name: 'Stirling, Scotland' }, { name: 'Fife, Scotland' }, { name: 'Lanarkshire, Scotland' },
+        { name: 'Ayrshire, Scotland' }, { name: 'Dumfries, Scotland' }, { name: 'Falkirk, Scotland' },
+        { name: 'Paisley, Scotland' }, { name: 'Livingston, Scotland' }
+      ];
+    }
+
+    // Specialized Grid for Wales
+    if (normalizedLoc === 'wales') {
+      return [
+        { name: 'Cardiff, Wales' }, { name: 'Swansea, Wales' }, { name: 'Newport, Wales' },
+        { name: 'Wrexham, Wales' }, { name: 'Bangor, Wales' }, { name: 'St Davids, Wales' },
+        { name: 'Bridgend, Wales' }, { name: 'Llanelli, Wales' }, { name: 'Carmarthen, Wales' }
+      ];
+    }
+
+    // Specialized Grid for Northern Ireland
+    if (normalizedLoc === 'northern ireland' || normalizedLoc === 'ni') {
+      return [
+        { name: 'Belfast, Northern Ireland' }, { name: 'Londonderry, Northern Ireland' },
+        { name: 'Lisburn, Northern Ireland' }, { name: 'Newry, Northern Ireland' },
+        { name: 'Armagh, Northern Ireland' }, { name: 'Enniskillen, Northern Ireland' }
+      ];
+    }
+
     if (normalizedLoc === 'us' || normalizedLoc === 'usa' || normalizedLoc === 'united states') {
       return [
         { name: 'New York, NY' },
