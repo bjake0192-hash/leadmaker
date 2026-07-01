@@ -1,5 +1,5 @@
-import { searchGoogle } from '../../services/searchService';
-import { Lead, Region } from '../types';
+import { searchGoogle } from '../../services/searchService.js';
+import { Lead, Region } from '../types.js';
 import crypto from 'crypto';
 
 export class SearchWorker {

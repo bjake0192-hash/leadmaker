@@ -1,11 +1,11 @@
-import { PipelineConfig, Lead } from './types';
-import { MapGridWorker } from './workers/MapGridWorker';
-import { SearchWorker } from './workers/SearchWorker';
-import { Collector } from './workers/Collector';
-import { Deduplicator } from './workers/Deduplicator';
-import { WebsiteCrawler } from './workers/WebsiteCrawler';
-import { ContactFinder } from './workers/ContactFinder';
-import { Exporter } from './workers/Exporter';
+import { PipelineConfig, Lead } from './types.js';
+import { MapGridWorker } from './workers/MapGridWorker.js';
+import { SearchWorker } from './workers/SearchWorker.js';
+import { Collector } from './workers/Collector.js';
+import { Deduplicator } from './workers/Deduplicator.js';
+import { WebsiteCrawler } from './workers/WebsiteCrawler.js';
+import { ContactFinder } from './workers/ContactFinder.js';
+import { Exporter } from './workers/Exporter.js';
 
 export class PipelineOrchestrator {
   private mapGridWorker = new MapGridWorker();

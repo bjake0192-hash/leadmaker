@@ -1,4 +1,4 @@
-import { Region } from '../types';
+import { Region } from '../types.js';
 
 export class MapGridWorker {
   /**

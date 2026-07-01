@@ -1,4 +1,4 @@
-import { Lead } from '../types';
+import { Lead } from '../types.js';
 
 export class Collector {
   private leads: Map<string, Lead> = new Map();

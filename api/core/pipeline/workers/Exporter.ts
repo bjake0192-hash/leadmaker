@@ -1,6 +1,6 @@
 import * as xlsx from 'xlsx';
 import { Parser } from 'json2csv';
-import { Lead } from '../types';
+import { Lead } from '../types.js';
 
 export class Exporter {
   /**
