@@ -140,7 +140,9 @@ const searchSerperMaps = async (query: string, limit: number, apiKey: string, pa
     try {
         const response = await axios.post('https://google.serper.dev/maps', {
             q: query,
-            num: Math.min(limit, 100), // Serper allows up to 100 per request
+            gl: 'uk', // Strictly limit results to the United Kingdom
+            hl: 'en-gb',
+            num: Math.min(limit, 100), 
             page: page
         }, {
             headers: {
@@ -213,9 +215,10 @@ const searchGoogleMaps = async (query: string, limit: number, apiKey: string, pa
             q: query,
             type: "search",
             api_key: apiKey,
-            hl: "en",
-            start: (page - 1) * 20, // SerpApi uses 'start' for pagination
-            ll: "@0,0,1z" // Global or rely on query location
+            hl: "en-gb",
+            gl: "uk", // Strictly limit results to the United Kingdom
+            start: (page - 1) * 20, 
+            ll: "@53.4808,-2.2426,6z" // Centered on the UK
         });
 
         if (response.local_results && Array.isArray(response.local_results)) {

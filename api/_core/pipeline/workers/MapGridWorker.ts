@@ -52,7 +52,12 @@ export class MapGridWorker {
       ];
     }
 
-    // Default fallback: just return the location itself as a single region
-    return [{ name: location }];
+    // Default fallback: ensure it always points to the UK
+    let finalLocation = location;
+    if (!normalizedLoc.includes('uk') && !normalizedLoc.includes('united kingdom')) {
+      finalLocation = `${location}, United Kingdom`;
+    }
+    
+    return [{ name: finalLocation }];
   }
 }
