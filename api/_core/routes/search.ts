@@ -19,7 +19,14 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
       .insert({
         query: query || `${keyword} in ${location}${fastMode ? ' (Fast Mode)' : ''}${requirePhone ? ' (Phone Only)' : ''}`,
         max_results,
-        status: 'pending'
+        status: 'pending',
+        filters: {
+          keyword,
+          location,
+          fastMode,
+          requirePhone,
+          lastPage: 1
+        }
       })
       .select()
       .single();
@@ -162,3 +169,106 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
 });
 
 export default router;
+
+router.post('/extend', async (req: Request, res: Response): Promise<void> => {
+  const { search_id } = req.body;
+
+  if (!search_id) {
+    res.status(400).json({ error: 'Search ID is required' });
+    return;
+  }
+
+  try {
+    // 1. Get existing search record
+    const { data: search, error: fetchError } = await supabase
+      .from('searches')
+      .select('*')
+      .eq('id', search_id)
+      .single();
+
+    if (fetchError || !search) {
+      res.status(404).json({ error: 'Search not found' });
+      return;
+    }
+
+    const filters = search.filters || {};
+    const nextPage = (filters.lastPage || 1) + 1;
+    const { keyword, location, fastMode, requirePhone } = filters;
+
+    if (!keyword || !location) {
+      res.status(400).json({ error: 'Invalid search record: missing keyword/location' });
+      return;
+    }
+
+    // 2. Update search record to processing
+    await supabase
+      .from('searches')
+      .update({ 
+        status: 'processing',
+        filters: { ...filters, lastPage: nextPage }
+      })
+      .eq('id', search_id);
+
+    // 3. Start processing
+    const orchestrator = new PipelineOrchestrator();
+    
+    // We'll run this in the background since it's an extension
+    (async () => {
+      try {
+        const pipelineLeads = await orchestrator.run({
+          keyword,
+          location,
+          maxResultsPerRegion: 50, // Fixed batch size for extensions
+          fastMode,
+          requirePhone,
+          page: nextPage
+        });
+
+        const validResults = pipelineLeads.map(lead => ({
+          search_id: search.id,
+          name: lead.name,
+          email: lead.emails.length > 0 ? lead.emails[0] : null,
+          phone: lead.phones.length > 0 ? lead.phones[0] : null,
+          address: lead.address,
+          company: lead.name,
+          source_url: lead.url,
+        }));
+
+        if (validResults.length > 0) {
+          console.log(`[search.ts] Inserting ${validResults.length} extended leads into results table...`);
+          // Deduplicate by source_url to avoid double-inserting if Map results overlap
+          // Though PipelineOrchestrator should handle this, double-checking is safe.
+          const { error: insertError } = await supabase.from('results').insert(validResults);
+          if (insertError) {
+             console.error('[search.ts] Error inserting extended results:', insertError);
+          }
+        }
+
+        await supabase
+          .from('searches')
+          .update({ 
+            status: 'completed', 
+            completed_at: new Date().toISOString() 
+          })
+          .eq('id', search.id);
+
+      } catch (error) {
+        console.error('Extension processing error:', error);
+        await supabase
+          .from('searches')
+          .update({ status: 'completed' }) // Don't fail the whole search if one extension fails
+          .eq('id', search.id);
+      }
+    })();
+
+    res.json({
+      success: true,
+      next_page: nextPage,
+      message: 'Search extension started'
+    });
+
+  } catch (error) {
+    console.error('Extend search error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});

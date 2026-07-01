@@ -29,15 +29,15 @@ const BLOCKED_DOMAINS = [
     'wsj.com', 'cnbc.com', 'reuters.com', 'usatoday.com'
 ];
 
-export const searchGoogle = async (query: string, numResults: number = 10): Promise<SearchResult[]> => {
-  console.log(`[searchService] Starting search for: "${query}" with target results: ${numResults}`);
+export const searchGoogle = async (query: string, numResults: number = 10, page: number = 1): Promise<SearchResult[]> => {
+  console.log(`[searchService] Starting search for: "${query}" (Page: ${page}) with target results: ${numResults}`);
   
   // 1. Try Serper.dev first (Most generous free tier: 2500 requests)
   const serperApiKey = process.env.SERPER_API_KEY;
   if (serperApiKey && serperApiKey !== 'your_serper_api_key_here') {
-      console.log(`[searchService] Using Serper.dev for "${query}"`);
+      console.log(`[searchService] Using Serper.dev for "${query}" (Page: ${page})`);
       try {
-          return await searchSerperMaps(query, numResults, serperApiKey);
+          return await searchSerperMaps(query, numResults, serperApiKey, page);
       } catch (e) {
           console.error(`[searchService] Serper.dev search failed for "${query}":`, e);
       }
@@ -48,9 +48,9 @@ export const searchGoogle = async (query: string, numResults: number = 10): Prom
   // 2. Fallback to SerpApi if available
   const serpapiKey = process.env.SERPAPI_KEY;
   if (serpapiKey && serpapiKey !== 'your_serpapi_key_here') {
-      console.log(`[searchService] Using SerpApi for "${query}"`);
+      console.log(`[searchService] Using SerpApi for "${query}" (Page: ${page})`);
       try {
-          return await searchGoogleMaps(query, numResults, serpapiKey);
+          return await searchGoogleMaps(query, numResults, serpapiKey, page);
       } catch (e) {
           console.error(`[searchService] SerpApi search failed for "${query}":`, e);
       }
@@ -133,14 +133,15 @@ export const searchGoogle = async (query: string, numResults: number = 10): Prom
 };
 
 // Google Maps Scraper using Serper.dev
-const searchSerperMaps = async (query: string, limit: number, apiKey: string): Promise<SearchResult[]> => {
-    console.log(`Searching Google Maps via Serper.dev for "${query}"`);
+const searchSerperMaps = async (query: string, limit: number, apiKey: string, page: number = 1): Promise<SearchResult[]> => {
+    console.log(`Searching Google Maps via Serper.dev for "${query}" (Page: ${page})`);
     const results: SearchResult[] = [];
     
     try {
         const response = await axios.post('https://google.serper.dev/maps', {
             q: query,
-            num: limit
+            num: limit,
+            page: page
         }, {
             headers: {
                 'X-API-KEY': apiKey,
@@ -202,8 +203,8 @@ const searchSerperMaps = async (query: string, limit: number, apiKey: string): P
 };
 
 // Google Maps Scraper using SerpApi
-const searchGoogleMaps = async (query: string, limit: number, apiKey: string): Promise<SearchResult[]> => {
-    console.log(`Searching Google Maps via SerpApi for "${query}"`);
+const searchGoogleMaps = async (query: string, limit: number, apiKey: string, page: number = 1): Promise<SearchResult[]> => {
+    console.log(`Searching Google Maps via SerpApi for "${query}" (Page: ${page})`);
     const results: SearchResult[] = [];
     
     try {
@@ -213,6 +214,7 @@ const searchGoogleMaps = async (query: string, limit: number, apiKey: string): P
             type: "search",
             api_key: apiKey,
             hl: "en",
+            start: (page - 1) * 20, // SerpApi uses 'start' for pagination
             ll: "@0,0,1z" // Global or rely on query location
         });
 

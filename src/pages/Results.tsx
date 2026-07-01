@@ -13,6 +13,7 @@ const Results: React.FC = () => {
   const [total, setTotal] = useState(0);
   const [limit] = useState(50);
   const [exporting, setExporting] = useState(false);
+  const [extending, setExtending] = useState(false);
 
   const fetchResults = useCallback(async () => {
     if (!id) return;
@@ -66,6 +67,20 @@ const Results: React.FC = () => {
     }
   };
 
+  const handlePullMore = async () => {
+    if (!id) return;
+    setExtending(true);
+    try {
+      await api.post('/search/extend', { search_id: id });
+      // The polling will pick up the 'processing' status and refresh the results
+    } catch (error) {
+      console.error('Failed to extend search', error);
+      alert('Failed to extend search');
+    } finally {
+      setExtending(false);
+    }
+  };
+
   const totalPages = Math.ceil(total / limit);
 
   if (loading && !search) {
@@ -105,18 +120,33 @@ const Results: React.FC = () => {
           </div>
         </div>
         
-        <button
-          onClick={handleExport}
-          disabled={exporting || total === 0}
-          className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${exporting || total === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-        >
-          {exporting ? (
-            <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
-          ) : (
-            <Download className="-ml-1 mr-2 h-4 w-4" />
-          )}
-          Export to Excel
-        </button>
+        <div className="flex space-x-2">
+          <button
+            onClick={handlePullMore}
+            disabled={extending || search.status === 'processing'}
+            className={`inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${extending || search.status === 'processing' ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            {extending || search.status === 'processing' ? (
+              <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
+            ) : (
+              <Download className="-ml-1 mr-2 h-4 w-4 transform rotate-180" />
+            )}
+            Pull More
+          </button>
+          
+          <button
+            onClick={handleExport}
+            disabled={exporting || total === 0}
+            className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${exporting || total === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            {exporting ? (
+              <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
+            ) : (
+              <Download className="-ml-1 mr-2 h-4 w-4" />
+            )}
+            Export to Excel
+          </button>
+        </div>
       </div>
 
       {/* Results Table */}

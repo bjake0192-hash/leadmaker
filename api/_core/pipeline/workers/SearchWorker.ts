@@ -6,13 +6,13 @@ export class SearchWorker {
   /**
    * Searches for a keyword within a specific region.
    */
-  public async searchRegion(keyword: string, region: Region, limit: number = 10): Promise<Lead[]> {
+  public async searchRegion(keyword: string, region: Region, limit: number = 10, page: number = 1): Promise<Lead[]> {
     const query = `${keyword} in ${region.name}`;
-    console.log(`[SearchWorker] Searching for: "${query}"`);
+    console.log(`[SearchWorker] Searching for: "${query}" (Page: ${page})`);
     
     // We'll reuse the existing searchService which handles DuckDuckGo/Bing fallback
     // and now natively supports Google Maps via SerpApi!
-    const results = await searchGoogle(query, limit);
+    const results = await searchGoogle(query, limit, page);
     
     return results.map(r => ({
       id: crypto.randomUUID(),

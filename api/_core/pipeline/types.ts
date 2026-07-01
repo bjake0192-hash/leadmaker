@@ -38,4 +38,5 @@ export interface PipelineConfig {
   exportFormat?: 'csv' | 'excel' | 'google_sheets';
   fastMode?: boolean;
   requirePhone?: boolean;
+  page?: number;
 }

@@ -36,7 +36,7 @@ export class PipelineOrchestrator {
     const limitPerRegion = Math.max(Math.ceil(totalMax / regions.length), 10);
     
     const regionPromises = regions.map(region => 
-      this.searchWorker.searchRegion(config.keyword, region, limitPerRegion)
+      this.searchWorker.searchRegion(config.keyword, region, limitPerRegion, config.page || 1)
     );
     
     const resultsArray = await Promise.all(regionPromises);
