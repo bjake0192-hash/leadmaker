@@ -32,25 +32,18 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
       throw new Error('Failed to create search record');
     }
 
-    // 2. Return response immediately
-    res.json({
-      search_id: search.id,
-      status: 'pending',
-      estimated_time: fastMode ? 5 : max_results * 10 // Fast mode is much quicker
-    });
-
-    // 3. Start processing in background using the new Pipeline Orchestrator
-    (async () => {
+    // 2. Start processing
+    const orchestrator = new PipelineOrchestrator();
+    
+    // If it's Fast Mode, we can try to wait for the initial search results 
+    // before responding to ensure the user sees progress immediately on Vercel.
+    if (fastMode) {
       try {
         await supabase
           .from('searches')
           .update({ status: 'processing' })
           .eq('id', search.id);
 
-        const orchestrator = new PipelineOrchestrator();
-        
-        // Note: In production, limit maxResultsPerRegion based on max_results 
-        // to avoid over-fetching if there are many regions.
         const pipelineLeads = await orchestrator.run({
           keyword,
           location,
@@ -58,26 +51,70 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
           fastMode,
         });
 
-        // 4. Map pipeline leads to database schema
         const validResults = pipelineLeads.map(lead => ({
           search_id: search.id,
           name: lead.name,
           email: lead.emails.length > 0 ? lead.emails[0] : null,
-          company: lead.name, // Usually the title is the company name
+          company: lead.name,
           source_url: lead.url,
-          // You could extend the DB schema to store phones, socials, summary, leadScore
         }));
 
-        // Insert results
         if (validResults.length > 0) {
-            const { error: insertError } = await supabase
-            .from('results')
-            .insert(validResults);
-            
-            if (insertError) {
-                console.error('Error inserting results:', insertError);
-                throw insertError;
-            }
+          await supabase.from('results').insert(validResults);
+        }
+
+        await supabase
+          .from('searches')
+          .update({ 
+            status: 'completed', 
+            completed_at: new Date().toISOString() 
+          })
+          .eq('id', search.id);
+
+        res.json({
+          search_id: search.id,
+          status: 'completed',
+          results_count: validResults.length
+        });
+        return;
+      } catch (error) {
+        console.error('Fast mode error:', error);
+        // Fallback to background if it fails or takes too long
+      }
+    }
+
+    // Default: Return response immediately for Deep Mode or if Fast Mode failed/timed out
+    res.json({
+      search_id: search.id,
+      status: 'pending',
+      estimated_time: fastMode ? 5 : max_results * 10
+    });
+
+    // 3. Start background processing (Best effort for Deep Mode on Vercel)
+    (async () => {
+      try {
+        await supabase
+          .from('searches')
+          .update({ status: 'processing' })
+          .eq('id', search.id);
+
+        const pipelineLeads = await orchestrator.run({
+          keyword,
+          location,
+          maxResultsPerRegion: max_results,
+          fastMode,
+        });
+
+        const validResults = pipelineLeads.map(lead => ({
+          search_id: search.id,
+          name: lead.name,
+          email: lead.emails.length > 0 ? lead.emails[0] : null,
+          company: lead.name,
+          source_url: lead.url,
+        }));
+
+        if (validResults.length > 0) {
+          await supabase.from('results').insert(validResults);
         }
 
         await supabase

@@ -28,14 +28,19 @@ export class PipelineOrchestrator {
     const regions = await this.mapGridWorker.breakIntoRegions(config.location);
     console.log(`[Pipeline] Discovered ${regions.length} regions to search.`);
 
-    // 2. Search Worker: Search each region
-    let allDiscoveredLeads: Lead[] = [];
-    const limitPerRegion = config.maxResultsPerRegion || 10;
+    // 2. Search Worker: Search each region in parallel for speed
+    console.log(`[Pipeline] Searching ${regions.length} regions in parallel...`);
     
-    for (const region of regions) {
-      const regionLeads = await this.searchWorker.searchRegion(config.keyword, region, limitPerRegion);
-      allDiscoveredLeads = allDiscoveredLeads.concat(regionLeads);
-    }
+    // Divide max results by regions to be efficient with credits
+    const totalMax = config.maxResultsPerRegion || 10;
+    const limitPerRegion = Math.max(Math.ceil(totalMax / regions.length), 10);
+    
+    const regionPromises = regions.map(region => 
+      this.searchWorker.searchRegion(config.keyword, region, limitPerRegion)
+    );
+    
+    const resultsArray = await Promise.all(regionPromises);
+    let allDiscoveredLeads: Lead[] = resultsArray.flat();
 
     // 3. Deduplicator: Remove duplicate domains
     console.log(`[Pipeline] Found ${allDiscoveredLeads.length} total leads. Deduplicating...`);

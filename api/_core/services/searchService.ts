@@ -138,7 +138,9 @@ const searchSerperMaps = async (query: string, limit: number, apiKey: string): P
             }
         });
 
+        console.log(`[Serper] Raw response status: ${response.status}`);
         if (response.data.maps && Array.isArray(response.data.maps)) {
+            console.log(`[Serper] Found ${response.data.maps.length} raw results in maps array.`);
             for (const place of response.data.maps) {
                 if (results.length >= limit) break;
                 
