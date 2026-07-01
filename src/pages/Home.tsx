@@ -56,24 +56,16 @@ const Home: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl w-full space-y-12 text-center">
-        <div className="space-y-4">
-          <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-sm font-semibold tracking-wide uppercase shadow-[0_0_15px_rgba(37,99,235,0.1)]">
-            <span className="relative flex h-2 w-2 mr-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
-            </span>
-            Next-Gen Lead Generation
-          </div>
-          <h1 className="text-5xl font-extrabold text-slate-900 sm:text-6xl tracking-tight">
-            Build your pipeline with <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">OpenLead</span>
-          </h1>
-          <p className="mt-5 max-w-2xl mx-auto text-xl text-slate-500 font-medium">
-            Search, extract, and enrich B2B leads from Google Maps instantly. The most accurate data for your sales team.
-          </p>
+      <div className="max-w-4xl w-full space-y-8 text-center">
+        <div className="flex flex-col items-center">
+          <img 
+            src="/openlead-logo.png" 
+            alt="OpenLead Logo" 
+            className="h-32 w-auto mb-4 drop-shadow-xl transition-transform hover:scale-105 duration-300" 
+          />
         </div>
 
-        <div className="mt-10 bg-white p-10 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-100 relative overflow-hidden">
+        <div className="mt-4 bg-white p-10 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-100 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600"></div>
           
           <form onSubmit={handleSearch} className="space-y-8">
