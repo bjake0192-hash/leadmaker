@@ -238,7 +238,65 @@ router.post('/extend', async (req: Request, res: Response): Promise<void> => {
     // 3. Start processing
     const orchestrator = new PipelineOrchestrator();
     
-    // We'll run this in the background since it's an extension
+    // For Fast Mode, we MUST wait for the result before responding, 
+    // otherwise Vercel kills the process immediately.
+    if (fastMode) {
+      try {
+        const pipelineLeads = await orchestrator.run({
+          keyword,
+          location,
+          targetTotal: 100, // Reasonable batch for extension
+          fastMode,
+          requirePhone,
+          page: nextPage
+        });
+
+        const validResults = pipelineLeads.map(lead => ({
+          search_id: search.id,
+          name: lead.name,
+          email: lead.emails.length > 0 ? lead.emails[0] : null,
+          phone: lead.phones.length > 0 ? lead.phones[0] : null,
+          address: lead.address,
+          company: lead.name,
+          source_url: lead.url,
+        }));
+
+        if (validResults.length > 0) {
+          const { data: existingResults } = await supabase
+            .from('results')
+            .select('source_url')
+            .eq('search_id', search.id);
+          
+          const existingUrls = new Set(existingResults?.map(r => r.source_url) || []);
+          const trulyNewResults = validResults.filter(r => !existingUrls.has(r.source_url));
+
+          if (trulyNewResults.length > 0) {
+            await supabase.from('results').insert(trulyNewResults);
+          }
+        }
+
+        await supabase
+          .from('searches')
+          .update({ 
+            status: 'completed', 
+            completed_at: new Date().toISOString() 
+          })
+          .eq('id', search.id);
+
+        res.json({
+          success: true,
+          next_page: nextPage,
+          results_count: validResults.length
+        });
+        return;
+      } catch (error) {
+        console.error('Fast mode extension error:', error);
+        // Fallback to background logic below if needed, but for now we'll just fail
+        await supabase.from('searches').update({ status: 'completed' }).eq('id', search_id);
+      }
+    }
+
+    // Default: Background processing for Deep Mode (Best effort)
     (async () => {
       try {
         const pipelineLeads = await orchestrator.run({
