@@ -25,7 +25,9 @@ export class PipelineOrchestrator {
     console.log(`[Pipeline] Starting pipeline for keyword: "${config.keyword}" in "${config.location}" (Target: ${config.targetTotal})`);
 
     // 1. Map/Grid Worker: Break location into regions
-    const regions = await this.mapGridWorker.breakIntoRegions(config.location);
+    // STABILITY FIX: Use quick mode (major cities only) for the first page
+    // to ensure a response within Vercel's 10s timeout.
+    const regions = await this.mapGridWorker.breakIntoRegions(config.location, startPage === 1);
     console.log(`[Pipeline] Discovered ${regions.length} regions to search.`);
 
     // 2. Search Worker: Search each region in parallel for speed
