@@ -140,7 +140,7 @@ const searchSerperMaps = async (query: string, limit: number, apiKey: string, pa
     try {
         const response = await axios.post('https://google.serper.dev/maps', {
             q: query,
-            num: 20, // Serper Maps usually returns 20 results per page
+            num: Math.min(limit, 100), // Serper allows up to 100 per request
             page: page
         }, {
             headers: {

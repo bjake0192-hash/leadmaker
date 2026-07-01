@@ -34,7 +34,7 @@ export interface Region {
 export interface PipelineConfig {
   keyword: string;
   location: string;
-  maxResultsPerRegion?: number;
+  targetTotal?: number;
   exportFormat?: 'csv' | 'excel' | 'google_sheets';
   fastMode?: boolean;
   requirePhone?: boolean;

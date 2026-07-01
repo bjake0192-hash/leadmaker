@@ -22,7 +22,7 @@ export class PipelineOrchestrator {
    * using queues (e.g. BullMQ, RabbitMQ) to avoid timeouts.
    */
   public async run(config: PipelineConfig): Promise<Lead[]> {
-    console.log(`[Pipeline] Starting pipeline for keyword: "${config.keyword}" in "${config.location}"`);
+    console.log(`[Pipeline] Starting pipeline for keyword: "${config.keyword}" in "${config.location}" (Target: ${config.targetTotal})`);
 
     // 1. Map/Grid Worker: Break location into regions
     const regions = await this.mapGridWorker.breakIntoRegions(config.location);
@@ -31,59 +31,75 @@ export class PipelineOrchestrator {
     // 2. Search Worker: Search each region in parallel for speed
     console.log(`[Pipeline] Searching ${regions.length} regions in parallel...`);
     
-    // Divide max results by regions to be efficient with credits
-    const totalMax = config.maxResultsPerRegion || 10;
-    let limitPerRegion = Math.max(Math.ceil(totalMax / regions.length), 20);
-    
-    // If phone is required, fetch more results per region to compensate for filtering
-    if (config.requirePhone) {
-      limitPerRegion = limitPerRegion * 3; // Fetch 3x more to find enough with phones
-    }
-    
-    // Cap at 100 per region per page to avoid API limits/timeouts
-    limitPerRegion = Math.min(limitPerRegion, 100);
+    const target = config.targetTotal || 10;
+    const startPage = config.page || 1;
+    let allDiscoveredLeads: Lead[] = [];
+    let currentPage = startPage;
+    let leadsNeeded = target;
 
-    const regionPromises = regions.map(region => 
-      this.searchWorker.searchRegion(config.keyword, region, limitPerRegion, config.page || 1)
-    );
-    
-    const resultsArray = await Promise.all(regionPromises);
-    let allDiscoveredLeads: Lead[] = resultsArray.flat();
+    // We'll fetch at least one full burst. 
+    // If it's a background task, we can potentially fetch multiple pages.
+    const fetchBurst = async (page: number) => {
+      // If phone is required, we need a massive buffer because Google Maps 
+      // often has many businesses without numbers or with landlines only.
+      // We'll fetch the maximum (100) per region if the target is high.
+      const limitPerRegion = config.requirePhone ? 100 : Math.max(Math.ceil(leadsNeeded / regions.length), 20);
+      
+      console.log(`[Pipeline] Fetching page ${page} with limit ${limitPerRegion} per region...`);
+      const regionPromises = regions.map(region => 
+        this.searchWorker.searchRegion(config.keyword, region, limitPerRegion, page)
+      );
+      
+      const resultsArray = await Promise.all(regionPromises);
+      return resultsArray.flat();
+    };
 
-    // 3. Deduplicator: Remove duplicate domains
-    console.log(`[Pipeline] Found ${allDiscoveredLeads.length} total leads. Deduplicating...`);
+    // First burst
+    const firstBurst = await fetchBurst(currentPage);
+    allDiscoveredLeads.push(...firstBurst);
+
+    // 3. Deduplicator & Initial Filter
     let uniqueLeads = this.deduplicator.deduplicate(allDiscoveredLeads);
-    console.log(`[Pipeline] ${uniqueLeads.length} unique leads remain.`);
-
-    // 3b. Optional: Filter by phone number if required
+    
     if (config.requirePhone) {
-      console.log(`[Pipeline] Filtering for leads with phone numbers...`);
       uniqueLeads = uniqueLeads.filter(lead => lead.phones && lead.phones.length > 0);
-      console.log(`[Pipeline] ${uniqueLeads.length} leads remain after phone filtering.`);
     }
+
+    // If we're in background mode and still haven't hit the target, try one more page
+    // (We limit to 2 pages total to avoid hitting SerpApi/Serper limits too hard in one go)
+    if (!config.fastMode && uniqueLeads.length < target && currentPage < startPage + 1) {
+      console.log(`[Pipeline] Only found ${uniqueLeads.length}/${target} leads. Fetching next page...`);
+      currentPage++;
+      const secondBurst = await fetchBurst(currentPage);
+      allDiscoveredLeads.push(...secondBurst);
+      
+      uniqueLeads = this.deduplicator.deduplicate(allDiscoveredLeads);
+      if (config.requirePhone) {
+        uniqueLeads = uniqueLeads.filter(lead => lead.phones && lead.phones.length > 0);
+      }
+    }
+
+    console.log(`[Pipeline] Final count after filtering: ${uniqueLeads.length} leads.`);
+    
+    // Trim to target
+    const finalLeadsToProcess = uniqueLeads.slice(0, target);
 
     // 4. Processing Phase: Crawl -> Contacts
     if (config.fastMode) {
-      console.log(`[Pipeline] Fast Mode enabled. Skipping website crawling and contact extraction.`);
-      for (const lead of uniqueLeads) {
+      console.log(`[Pipeline] Fast Mode enabled. Skipping website crawling.`);
+      for (const lead of finalLeadsToProcess) {
         this.collector.addLead(lead);
       }
     } else {
-      for (const lead of uniqueLeads) {
-        // 4a. Crawl
+      // Deep Mode: Process one by one (or in small batches)
+      for (const lead of finalLeadsToProcess) {
         await this.crawler.crawl(lead);
-        
-        // 4b. Find Contacts
         this.contactFinder.extractContacts(lead);
-        
-        // 4c. Collector: Store lead
         this.collector.addLead(lead);
       }
     }
 
     const finalLeads = this.collector.getAllLeads();
-    console.log(`[Pipeline] Pipeline finished successfully. Processed ${finalLeads.length} leads.`);
-    
     return finalLeads;
   }
 

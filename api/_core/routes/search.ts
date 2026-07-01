@@ -54,7 +54,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
         const pipelineLeads = await orchestrator.run({
           keyword,
           location,
-          maxResultsPerRegion: max_results,
+          targetTotal: max_results,
           fastMode,
           requirePhone,
         });
@@ -131,7 +131,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
         const pipelineLeads = await orchestrator.run({
           keyword,
           location,
-          maxResultsPerRegion: max_results,
+          targetTotal: max_results,
           fastMode,
           requirePhone,
         });
@@ -240,7 +240,7 @@ router.post('/extend', async (req: Request, res: Response): Promise<void> => {
         const pipelineLeads = await orchestrator.run({
           keyword,
           location,
-          maxResultsPerRegion: 50, // Fixed batch size for extensions
+          targetTotal: 50, // Fixed batch size for extensions
           fastMode,
           requirePhone,
           page: nextPage
